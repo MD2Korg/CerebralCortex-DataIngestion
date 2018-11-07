@@ -30,7 +30,7 @@ export PYSPARK_SUBMIT_ARGS="--packages org.apache.spark:spark-streaming-kafka-0-
 # Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.
 PARTICIPANTS=""
 
-# path of cc configuration path
+# directory path where all the CC configurations are stored
 CONFIG_DIRECTORY="/home/ali/IdeaProjects/CerebralCortex-2.0/conf/"
 
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.

@@ -96,10 +96,10 @@ class ReplayCerebralCortexData:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
+    parser.add_argument('-c', '--config_dir', help='Configuration directory path', required=True)
     parser.add_argument('-participants', '--participants',
                         help='Scan all users directories or only for the list provided in the script.', type=str,
                         default="all", required=False)
-    parser.add_argument('-c', '--config_dir', help='Configuration directory path', required=True)
 
     args = vars(parser.parse_args())
 
