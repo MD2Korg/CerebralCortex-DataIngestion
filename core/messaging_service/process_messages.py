@@ -29,19 +29,19 @@ from core.file_processor.data import ProcessData
 from pyspark.streaming.kafka import KafkaDStream
 
 
-def save_data(msg, data_path, config_filepath, ingestion_config, ingestion_type, nosql_in, influxdb_in):
+def save_data(msg, data_path, config_filepath, ingestion_config):
     CC = CerebralCortex(config_filepath)
-    process_data = ProcessData(CC, ingestion_config, ingestion_type)
-    process_data.ingest.file_processor(msg, data_path, influxdb_in, nosql_in)
+    process_data = ProcessData(CC, ingestion_config)
+    process_data.ingest.file_processor(msg, data_path, ingestion_config["influxdb_in"], ingestion_config["nosql_in"])
 
 #########################################################################################
 ######################### MySQL Based Data Ingestion ####################################
 #########################################################################################
 
-def mysql_batch_to_db(spark_context, replay_batch, data_path, config_filepath, ingestion_config, ingestion_type, nosql_in, influxdb_in):
+def mysql_batch_to_db(spark_context, replay_batch, data_path, config_filepath, ingestion_config):
     if len(replay_batch)>0:
         message = spark_context.parallelize(replay_batch)
-        message.foreach(lambda msg: save_data(msg, data_path, config_filepath, ingestion_config, ingestion_type, nosql_in, influxdb_in))
+        message.foreach(lambda msg: save_data(msg, data_path, config_filepath, ingestion_config))
         print("File Iteration count:", len(replay_batch))
 
 #########################################################################################
@@ -59,7 +59,7 @@ def verify_fields(msg: dict) -> bool:
         return True
     return True
 
-def kafka_msg_to_db(message: KafkaDStream, data_path, config_filepath, CC):
+def kafka_msg_to_db(message: KafkaDStream, data_path, config_filepath, ingestion_config, CC):
     """
     Read convert gzip file data into json object and publish it on Kafka
     :param message:
@@ -67,7 +67,7 @@ def kafka_msg_to_db(message: KafkaDStream, data_path, config_filepath, CC):
 
     records = message.map(lambda r: json.loads(r[1]))
     valid_records = records.filter(lambda rdd: verify_fields(rdd))
-    results = valid_records.map(lambda msg: save_data(msg, data_path, config_filepath))
+    results = valid_records.map(lambda msg: save_data(msg, data_path, config_filepath, ingestion_config))
     print("File Iteration count:", results.count())
     store_offset_ranges(message, CC)
 

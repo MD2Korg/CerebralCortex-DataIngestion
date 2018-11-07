@@ -24,27 +24,6 @@ export PYSPARK_SUBMIT_ARGS="--packages org.apache.spark:spark-streaming-kafka-0-
 
 
 #########################################################################################
-############################ Ingestion Configs ##########################################
-#########################################################################################
-
-# Data will be ingested in NoSQL storage if set to true. Acceptable parameters are true or false.
-NOSQL_INGEST = "false"
-
-# Data will be ingested in InfluxDB if set to true. Acceptable parameters are true or false.
-INFLUXDB_INGEST = "true"
-
-# Data ingestion source type. Whether data information (file names) will be fetched from MySQL or kafka messaging queue. Acceptable parameters are mysql or kafka only.
-INGESTION_TYPE = "mysql"
-
-# Set batch size if mysql INGESTION_TYPE is selected
-# Number of MySQL row a batch shall process. One MySQL row contains all .gz files paths of one day worth of data of a stream.
-MYDB_BATCH_SIZE="300"
-
-# Set only when kafka INGESTION_TYPE is selected.
-# how often CC-kafka shall check for new messages (in seconds)
-BATCH_DURATION="5"
-
-#########################################################################################
 ############################ YAML Config Paths and other configs ########################
 #########################################################################################
 
@@ -54,11 +33,7 @@ PARTICIPANTS=""
 # path of cc configuration path
 CONFIG_DIRECTORY="/home/ali/IdeaProjects/CerebralCortex-2.0/conf/"
 
-# path of ksp (kafka-stream-preprocessor) configuration path
-#INGESTION_CONFIG_FILEPATH="/home/ali/IdeaProjects/CerebralCortex-2.0/conf/data_ingestion.yml"
-
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.
 SPARK_MASTER="local[*]"
 
-
-spark-submit --conf spark.streaming.kafka.maxRatePerPartition=10 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 main.py -c $CONFIG_DIRECTORY -ii INFLUXDB_INGEST -ni NOSQL_INGEST -bd $BATCH_DURATION -mbs $MYDB_BATCH_SIZE -participants $PARTICIPANTS
+spark-submit --conf spark.streaming.kafka.maxRatePerPartition=10 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 main.py -c $CONFIG_DIRECTORY -participants $PARTICIPANTS

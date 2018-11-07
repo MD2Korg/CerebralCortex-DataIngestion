@@ -41,7 +41,7 @@ class ProcessData(CSVToDB, FlatbufferToDB):
 
         self.sql_data = CC.SqlData
 
-        self.ingestion_type = ingestion_type
+        self.ingestion_type = ingestion_config["data_ingestion"]["type"]
 
         self.logging = CC.logging
         self.logtypes = LogTypes()
