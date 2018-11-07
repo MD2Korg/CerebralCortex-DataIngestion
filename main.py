@@ -35,14 +35,14 @@ import argparse
 
 def run():
     parser = argparse.ArgumentParser(description='CerebralCortex Kafka Message Handler.')
-    parser.add_argument("-c", "--config_path", help="Configurations directory path.", required=True)
+    parser.add_argument("-c", "--config_dir", help="Configurations directory path.", required=True)
     parser.add_argument("-participants", "--participants",
                         help="Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.", default="",
                         required=False)
 
     args = vars(parser.parse_args())
 
-    config_dir_path = str(args["config_path"]).strip()
+    config_dir_path = str(args["config_dir"]).strip()
     participants = args["participants"]
 
     # data ingestion configurations
@@ -67,7 +67,7 @@ def run():
             if participants=="all" or participants=="":
                 new_replay_batch = replay_batch
             else:
-                selected_participants = participants.split(",")
+                selected_participants = list(filter(None, selected_participants.split(",")))
                 for rb in replay_batch:
                     if rb["owner_id"] in selected_participants:
                         new_replay_batch.append(rb)
