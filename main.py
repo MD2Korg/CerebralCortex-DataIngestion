@@ -36,7 +36,7 @@ import argparse
 def run():
     parser = argparse.ArgumentParser(description='CerebralCortex Kafka Message Handler.')
     parser.add_argument("-c", "--config_dir", help="Configurations directory path.", required=True)
-    parser.add_argument("-participants", "--participants",
+    parser.add_argument("-pa", "--participants",
                         help="Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.", default="",
                         required=False)
 
@@ -67,7 +67,7 @@ def run():
             if participants=="all" or participants=="":
                 new_replay_batch = replay_batch
             else:
-                selected_participants = list(filter(None, selected_participants.split(",")))
+                selected_participants = list(filter(None, participants.split(",")))
                 for rb in replay_batch:
                     if rb["owner_id"] in selected_participants:
                         new_replay_batch.append(rb)
