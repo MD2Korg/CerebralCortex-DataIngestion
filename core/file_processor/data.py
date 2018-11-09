@@ -28,7 +28,7 @@ from core.file_processor.process_flatbuffer import FlatbufferToDB
 from cerebralcortex.core.log_manager.log_handler import LogTypes
 
 class ProcessData(CSVToDB, FlatbufferToDB):
-    def __init__(self, CC, ingestion_config, ingestion_type):
+    def __init__(self, CC, ingestion_config):
         """
 
         :param CC: CerebralCortex object reference
@@ -57,12 +57,13 @@ class ProcessData(CSVToDB, FlatbufferToDB):
             self.influx_batch_size = 10000
             self.influx_day_datapoints_limit = 10000
 
+        self.file_type = "csv"
 
         # pseudo factory
         if self.file_type == "csv":
-            self.ingest = CSVToDB()
+            self.ingest = CSVToDB(self)
         elif self.file_type=="flatbuffer":
-            self.ingest = FlatbufferToDB()
+            self.ingest = FlatbufferToDB(self)
         else:
             raise ValueError(self.file_type + " is not supported to process files.")
 

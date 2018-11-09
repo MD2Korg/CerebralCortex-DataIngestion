@@ -43,49 +43,12 @@ from cerebralcortex.core.util.data_types import convert_sample, serialize_obj
 class CSVToDB():
     '''This class is responsible to read .gz files and insert data in HDFS and/or Influx.'''
 
-    def __init__(self):
+    def __init__(self, obj):
         """
 
         :param CC: CerebralCortex Configurations
         """
-        # self.config = CC.config
-        #
-        # #self.rawData = CC.RawData
-        # self.nosql = CC.RawData.nosql
-        # #self.nosql_store = CC.RawData.nosql_store
-        #
-        # self.sql_data = CC.SqlData
-        #
-        # self.data_replay_type = ksp_config["data_replay"]["replay_type"]
-        #
-        # # pseudo factory
-        # # if self.nosql_store == "hdfs":
-        # #     self.hdfs = pyarrow.hdfs.connect(self.CC.RawData.hdfs_ip, self.CC.RawData.hdfs_port)
-        # # elif self.nosql_store=="filesystem":
-        # #     self.filesystem_path = self.CC.RawData.filesystem_path
-        # # elif self.nosql_store=="aws_s3":
-        # #     self.minio_input_bucket = self.CC.RawData.minio_input_bucket
-        # #     self.minio_output_bucket = self.CC.RawData.minio_output_bucket
-        # #     self.minio_dir_prefix = self.CC.RawData.minio_dir_prefix
-        # # else:
-        # #     raise ValueError(self.nosql_store + " is not supported.")
-        #
-        # self.logging = CC.logging
-        # self.logtypes = LogTypes()
-        #
-        # if self.config['visualization_storage']!="none":
-        #     self.influxdbIP = self.config['influxdb']['host']
-        #     self.influxdbPort = self.config['influxdb']['port']
-        #     self.influxdbDatabase = self.config['influxdb']['database']
-        #     self.influxdbUser = self.config['influxdb']['db_user']
-        #     self.influxdbPassword = self.config['influxdb']['db_pass']
-        #     self.influx_blacklist = ksp_config["influxdb_blacklist"]
-        #
-        #     self.influx_batch_size = 10000
-        #     self.influx_day_datapoints_limit = 10000
-
-
-
+        self.obj = obj
 
     def file_processor(self, msg: dict, zip_filepath: str, influxdb_insert: bool = False, nosql_insert: bool = True):
 
@@ -98,7 +61,7 @@ class CSVToDB():
 
         """
 
-        if self.config['visualization_storage']=="none" and influxdb_insert:
+        if self.obj.config['visualization_storage']=="none" and influxdb_insert:
             raise ValueError("visualization_storage param is set to none in cerebralcortex.yml. Please provide proper configuration for visualization storage.")
 
         if not msg:
@@ -124,7 +87,7 @@ class CSVToDB():
         else:
             stream_type = StreamTypes.DATASTREAM
 
-        owner_name = self.sql_data.get_user_name(owner)
+        owner_name = self.obj.sql_data.get_user_name(owner)
         if "day" in msg:
             stream_day = msg["day"]
         if isinstance(msg["filename"], str):
@@ -140,18 +103,18 @@ class CSVToDB():
             stream_id = uuid.UUID(stream_id)
 
         if influxdb_insert:
-            influxdb_client = InfluxDBClient(host=self.influxdbIP, port=self.influxdbPort,
-                                             username=self.influxdbUser,
-                                             password=self.influxdbPassword, database=self.influxdbDatabase)
+            influxdb_client = InfluxDBClient(host=self.obj.influxdbIP, port=self.obj.influxdbPort,
+                                             username=self.obj.influxdbUser,
+                                             password=self.obj.influxdbPassword, database=self.obj.influxdbDatabase)
         if influxdb_insert or nosql_insert:
-            if self.data_replay_type == "mydb":
+            if self.obj.ingestion_type == "mysql":
                 for filename in filenames:
                     if os.path.exists(str(zip_filepath + filename)):
-                        all_data = self.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
+                        all_data = self.obj.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
                                                        data_descriptor,
                                                        influxdb_insert, influxdb_client, nosql_insert)
                         if nosql_insert:
-                            if not self.sql_data.is_day_processed(owner, stream_id, stream_day):
+                            if not self.obj.sql_data.is_day_processed(owner, stream_id, stream_day):
                                 nosql_data.extend(all_data)
                                 all_data.clear()
                     else:
@@ -164,8 +127,8 @@ class CSVToDB():
                     if nosql_insert:
                         nosql_data = all_data
 
-            self.nosql.write_file(owner, stream_id, nosql_data)
-            self.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
+            self.obj.nosql.write_file(owner, stream_id, nosql_data)
+            self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
                                                annotations, stream_type, nosql_data[0].start_time,
                                                nosql_data[len(nosql_data) - 1].start_time)
 
@@ -173,8 +136,10 @@ class CSVToDB():
             all_data.clear()
 
             # mark day as processed in data_replay table
-            if self.data_replay_type == "mydb":
-                self.sql_data.mark_processed_day(owner, stream_id, stream_day)
+            if self.obj.ingestion_type == "mydb":
+                self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
+    def __repr__(self):
+        return str(self.__dict__)
 
     def line_to_sample(self, filename, stream_id, stream_owner_id, stream_owner_name, stream_name,
                        data_descriptor, influxdb_insert, influxdb_client, nosql_insert):
@@ -201,8 +166,8 @@ class CSVToDB():
         line_protocol = ""
         fields = ""
 
-        if self.influx_blacklist:
-            blacklist_streams = self.influx_blacklist.values()
+        if self.obj.config['visualization_storage']!="none" and self.obj.influx_blacklist:
+            blacklist_streams = self.obj.influx_blacklist.values()
 
         if data_descriptor:
             total_dd_columns = len(data_descriptor)
@@ -229,11 +194,11 @@ class CSVToDB():
                         # TODO: improve the performance of sample parsing
                         if nosql_insert == True:
                             values = convert_sample(sample, stream_name)
-                        elif influxdb_insert == True and stream_name not in blacklist_streams and line_count < self.influx_day_datapoints_limit:
+                        elif influxdb_insert == True and stream_name not in blacklist_streams and line_count < self.obj.influx_day_datapoints_limit:
                             values = convert_sample(sample, stream_name)
 
                         ############### START INFLUXDB BLOCK
-                        if influxdb_insert and line_count < self.influx_day_datapoints_limit:
+                        if influxdb_insert and line_count < self.obj.influx_day_datapoints_limit:
                             if stream_name not in blacklist_streams:
                                 measurement_and_tags = '%s,owner_id=%s,owner_name=%s,stream_id=%s' % (
                                     str(stream_name.replace(" ", "_")), str(stream_owner_id), str(stream_owner_name),
@@ -286,16 +251,16 @@ class CSVToDB():
                                     int(ts) * 1000000))  # line protocol requires nanoseconds accuracy for timestamp
                                 measurement_and_tags = ""
                                 fields = ""
-                        elif influxdb_client is not None and influxdb_insert and line_count > self.influx_day_datapoints_limit:
+                        elif influxdb_client is not None and influxdb_insert and line_count > self.obj.influx_day_datapoints_limit:
                             try:
                                 influxdb_client.write_points(line_protocol, protocol="line")
                                 line_protocol = ""
                                 line_count=0
                             except:
-                                self.logging.log(
+                                self.obj.logging.log(
                                     error_message="STREAM ID: " + str(stream_id) + "Owner ID: " + str(stream_owner_id) + "Files: " + str(
                                         filename) + " - Error in writing data to influxdb. " + str(
-                                        traceback.format_exc()), error_type=self.logtypes.CRITICAL)
+                                        traceback.format_exc()), error_type=self.obj.logtypes.CRITICAL)
 
 
                         ############### END INFLUXDB BLOCK
@@ -313,15 +278,15 @@ class CSVToDB():
                         line_protocol = ""
                         line_count=0
                     except:
-                        self.logging.log(
+                        self.obj.logging.log(
                             error_message="STREAM ID: " + str(stream_id) + "Owner ID: " + str(stream_owner_id) + "Files: " + str(
                                 filename) + " - Error in writing data to influxdb. " + str(
-                                traceback.format_exc()), error_type=self.logtypes.CRITICAL)
+                                traceback.format_exc()), error_type=self.obj.logtypes.CRITICAL)
 
                 return grouped_samples
         except:
-            self.logging.log(error_message="STREAM ID: " + str(stream_id) + " - Cannot process file data. " + str(
-                traceback.format_exc()), error_type=self.logtypes.MISSING_DATA)
-            if line_count > self.influx_day_datapoints_limit:
+            self.obj.logging.log(error_message="STREAM ID: " + str(stream_id) + " - Cannot process file data. " + str(
+                traceback.format_exc()), error_type=self.obj.logtypes.MISSING_DATA)
+            if line_count > self.obj.influx_day_datapoints_limit:
                 line_protocol = ""
             return grouped_samples

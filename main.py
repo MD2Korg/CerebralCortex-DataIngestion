@@ -78,7 +78,7 @@ def run():
             raise Exception("Messaging service is disabled (none) in cerebralcortex.yml. Please update configs.")
 
         consumer_group_id = "md2k-test"
-        broker = str(CC.config["kafkaserver"]["host"])+":"+str(CC.config["kafkaserver"]["port"])
+        broker = str(CC.config["kafka"]["host"])+":"+str(CC.config["kafka"]["port"])
         ssc = StreamingContext(spark_context, ping_kafka)
         kafka_files_stream = spark_kafka_consumer(["filequeue"], ssc, broker, consumer_group_id, CC)
         if kafka_files_stream is not None:

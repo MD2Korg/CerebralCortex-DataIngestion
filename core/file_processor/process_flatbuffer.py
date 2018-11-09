@@ -40,4 +40,9 @@ class FlatbufferToDB():
 
         # TODO: Implement flatbuffer parser
 
+        # Save metadata to MySQL
+        # self.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
+        #                                        annotations, stream_type, nosql_data[0].start_time,
+        #                                        nosql_data[len(nosql_data) - 1].start_time)
+
         raise Exception("Flatbuffer is not implemented yet.")

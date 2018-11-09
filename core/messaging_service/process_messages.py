@@ -32,7 +32,7 @@ from pyspark.streaming.kafka import KafkaDStream
 def save_data(msg, data_path, config_filepath, ingestion_config):
     CC = CerebralCortex(config_filepath)
     process_data = ProcessData(CC, ingestion_config)
-    process_data.ingest.file_processor(msg, data_path, ingestion_config["influxdb_in"], ingestion_config["nosql_in"])
+    process_data.ingest.file_processor(msg, data_path, ingestion_config["data_ingestion"]["influxdb_in"], ingestion_config["data_ingestion"]["nosql_in"])
 
 #########################################################################################
 ######################### MySQL Based Data Ingestion ####################################
