@@ -37,3 +37,6 @@ COPY . /spark_app
 
 
 VOLUME /data
+
+WORKDIR /spark_app
+ENTRYPOINT exec sh run.sh
