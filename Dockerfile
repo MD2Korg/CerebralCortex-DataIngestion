@@ -1,4 +1,4 @@
-FROM md2korg/cerebralcortex:latest
+FROM md2korg/cerebralcortex:2.3.0
 
 RUN mkdir -p /cc_conf /spark_app
 COPY . /spark_app
