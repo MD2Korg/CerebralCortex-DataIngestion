@@ -127,16 +127,17 @@ class CSVToDB():
                     if nosql_insert:
                         nosql_data = all_data
 
-            self.obj.nosql.write_file(owner, stream_id, nosql_data)
-            self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
-                                               annotations, stream_type, nosql_data[0].start_time,
-                                               nosql_data[len(nosql_data) - 1].start_time)
+            if len(nosql_data)>0:
+                self.obj.nosql.write_file(owner, stream_id, nosql_data)
+                self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
+                                                   annotations, stream_type, nosql_data[0].start_time,
+                                                   nosql_data[len(nosql_data) - 1].start_time)
 
             nosql_data.clear()
             all_data.clear()
 
             # mark day as processed in data_replay table
-            if self.obj.ingestion_type == "mydb":
+            if self.obj.ingestion_type == "mysql":
                 self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
     def __repr__(self):
         return str(self.__dict__)
@@ -165,6 +166,9 @@ class CSVToDB():
         line_count = 0
         line_protocol = ""
         fields = ""
+
+        if stream_owner_name=="":
+            stream_owner_name = "Unknown"
 
         if self.obj.config['visualization_storage']!="none" and self.obj.influx_blacklist:
             blacklist_streams = self.obj.influx_blacklist.values()
