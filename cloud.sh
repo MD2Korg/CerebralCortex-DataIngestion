@@ -32,7 +32,7 @@ export PATH=$SPARK_HOME/bin:$PATH
 PARTICIPANTS=""
 
 # directory path where all the CC configurations are stored
-CONFIG_DIRECTORY="/home/ali/IdeaProjects/CerebralCortex-2.0/conf/"
+CONFIG_DIRECTORY="/cerebralcortex/code/config/cc_2_4/"
 
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.
 SPARK_MASTER="spark://dagobah10dot.memphis.edu:7077"
