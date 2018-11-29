@@ -167,7 +167,7 @@ class CSVToDB():
         line_protocol = ""
         fields = ""
 
-        if stream_owner_name=="":
+        if stream_owner_name=="" or stream_name is None:
             stream_owner_name = "Unknown"
 
         if self.obj.config['visualization_storage']!="none" and self.obj.influx_blacklist:

@@ -5,14 +5,14 @@
 #########################################################################################
 
 # Python3 path
-export PYSPARK_PYTHON=/usr/bin/python3
+export PYSPARK_PYTHON=/usr/bin/python3.6
 
 # export CerebralCortex path if CerebralCortex is not installed
-#export PYTHONPATH="${PYTHONPATH}:/home/ali/IdeaProjects/CerebralCortex-2.0/"
+#export PYTHONPATH="${PYTHONPATH}:/cerebralcortex/code/ali/CerebralCortex/"
 
 # Update path to libhdfs.so if it's different than /usr/local/hadoop/lib/native/libhdfs.so
 # uncooment it if using HDFS as NoSQl storage
-#export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/hadoop/lib/native/libhdfs.so
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/opt/hadoop/lib/native/libhdfs.so
 
 #Spark path, uncomment if spark home is not exported else where.
 #export SPARK_HOME=/home/ali/spark/spark-2.2.1-bin-hadoop2.7/
@@ -32,10 +32,15 @@ export PATH=$SPARK_HOME/bin:$PATH
 PARTICIPANTS=""
 
 # directory path where all the CC configurations are stored
-CONFIG_DIRECTORY="//home/ali/IdeaProjects/CerebralCortex-2.0/conf/"
+CONFIG_DIRECTORY="/home/ali/IdeaProjects/CerebralCortex-2.0/conf/"
 
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.
-SPARK_MASTER="local[*]"
+SPARK_MASTER="spark://dagobah10dot.memphis.edu:7077"
+SPARK_UI_PORT=4087
+
+PY_FILES="/cerebralcortex/code/ali/CerebralCortex/dist/MD2K_Cerebral_Cortex-2.4.0-py3.6.egg,dist/MD2K_CerebralCortex_DataIngestion-2.4.0-py3.6.egg"
+
+python3.6 setup.py bdist_egg
 
 # add -p $PARTICIPANTS at the end of below command if participants' UUIDs are provided
-spark-submit --conf spark.streaming.kafka.maxRatePerPartition=10 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 main.py -c $CONFIG_DIRECTORY
+spark-submit --conf spark.ui.port=$SPARK_UI_PORT spark.streaming.kafka.maxRatePerPartition=10 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY

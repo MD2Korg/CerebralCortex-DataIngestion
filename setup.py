@@ -12,9 +12,9 @@ with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
 setup(
-    name="MD2K: Cerebral Cortex: Kafka File Queue Processor",
+    name="MD2K: CerebralCortex: DataIngestion",
 
-    version='2.2.3',
+    version='2.4.0',
 
     description='',
     long_description=long_description,
