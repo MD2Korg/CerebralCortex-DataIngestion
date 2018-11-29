@@ -110,7 +110,7 @@ class CSVToDB():
             if self.obj.ingestion_type == "mysql":
                 for filename in filenames:
                     if os.path.exists(str(zip_filepath + filename)):
-                        all_data = self.obj.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
+                        all_data = self.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
                                                        data_descriptor,
                                                        influxdb_insert, influxdb_client, nosql_insert)
                         if nosql_insert:
