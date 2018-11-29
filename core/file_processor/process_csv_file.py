@@ -128,16 +128,17 @@ class CSVToDB():
                         nosql_data = all_data
 
             if len(nosql_data)>0:
-                self.obj.nosql.write_file(owner, stream_id, nosql_data)
-                self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
-                                                   annotations, stream_type, nosql_data[0].start_time,
-                                                   nosql_data[len(nosql_data) - 1].start_time)
+                is_successful = self.obj.nosql.write_file(owner, stream_id, nosql_data)
+                if is_successful==True:
+                    self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
+                                                       annotations, stream_type, nosql_data[0].start_time,
+                                                       nosql_data[len(nosql_data) - 1].start_time)
 
             nosql_data.clear()
             all_data.clear()
 
             # mark day as processed in data_replay table
-            if self.obj.ingestion_type == "mysql":
+            if is_successful==True and self.obj.ingestion_type == "mysql":
                 self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
     def __repr__(self):
         return str(self.__dict__)
