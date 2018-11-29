@@ -292,6 +292,6 @@ class CSVToDB():
         except:
             self.obj.logging.log(error_message="STREAM ID: " + str(stream_id) + " - Cannot process file data. " + str(
                 traceback.format_exc()), error_type=self.obj.logtypes.MISSING_DATA)
-            if line_count > self.obj.influx_day_datapoints_limit:
+            if influxdb_insert and line_count > self.obj.influx_day_datapoints_limit:
                 line_protocol = ""
             return grouped_samples
