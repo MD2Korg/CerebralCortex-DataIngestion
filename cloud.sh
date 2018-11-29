@@ -43,4 +43,4 @@ PY_FILES="/cerebralcortex/code/ali/CerebralCortex/dist/MD2K_Cerebral_Cortex-2.4.
 python3.6 setup.py bdist_egg
 
 # add -p $PARTICIPANTS at the end of below command if participants' UUIDs are provided
-spark-submit --conf spark.ui.port=$SPARK_UI_PORT spark.streaming.kafka.maxRatePerPartition=10 --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY
+spark-submit --master $SPARK_MASTER --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 40 --conf spark.streaming.kafka.maxRatePerPartition=10 --driver-memory 1g --executor-memory 1g --packages org.apache.spark:spark-streaming-kafka-0-8_2.11:2.2.0 --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY
