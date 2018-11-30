@@ -61,6 +61,8 @@ class CSVToDB():
 
         """
 
+        is_successful = False
+
         if self.obj.config['visualization_storage']=="none" and influxdb_insert:
             raise ValueError("visualization_storage param is set to none in cerebralcortex.yml. Please provide proper configuration for visualization storage.")
 
