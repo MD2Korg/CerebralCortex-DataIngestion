@@ -62,16 +62,18 @@ def run():
     CC = CerebralCortex(config_dir_path)
 
     if ingestion_type=="mysql":
-        for replay_batch in CC.SqlData.get_replay_batch(record_limit=mydb_batch_size, nosql_blacklist=ingestion_config["nosql_blacklist"]):
-            new_replay_batch = []
-            if participants=="all" or participants=="":
-                new_replay_batch = replay_batch
-            else:
-                selected_participants = list(filter(None, participants.split(",")))
-                for rb in replay_batch:
-                    if rb["owner_id"] in selected_participants:
-                        new_replay_batch.append(rb)
-            mysql_batch_to_db(spark_context, new_replay_batch, data_path, config_dir_path, ingestion_config)
+        all_days = CC.SqlData.get_all_data_days()
+        for day in all_days:
+            for replay_batch in CC.SqlData.get_replay_batch(day=day, record_limit=mydb_batch_size, nosql_blacklist=ingestion_config["nosql_blacklist"]):
+                new_replay_batch = []
+                if participants=="all" or participants=="":
+                    new_replay_batch = replay_batch
+                else:
+                    selected_participants = list(filter(None, participants.split(",")))
+                    for rb in replay_batch:
+                        if rb["owner_id"] in selected_participants:
+                            new_replay_batch.append(rb)
+                mysql_batch_to_db(spark_context, new_replay_batch, data_path, config_dir_path, ingestion_config)
 
     else:
         if CC.config["messaging_service"]=="none":
