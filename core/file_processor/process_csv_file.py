@@ -171,6 +171,7 @@ class CSVToDB():
         line_count = 0
         line_protocol = ""
         fields = ""
+        values = []
 
         if stream_owner_name=="" or stream_name is None:
             stream_owner_name = "Unknown"
