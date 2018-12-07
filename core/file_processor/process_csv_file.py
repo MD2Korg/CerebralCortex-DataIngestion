@@ -111,16 +111,17 @@ class CSVToDB():
         if influxdb_insert or nosql_insert:
             if self.obj.ingestion_type == "mysql":
                 for filename in filenames:
-                    if os.path.exists(str(zip_filepath + filename)):
-                        all_data = self.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
-                                                       data_descriptor,
-                                                       influxdb_insert, influxdb_client, nosql_insert)
-                        if nosql_insert:
-                            if not self.obj.sql_data.is_day_processed(owner, stream_id, stream_day):
-                                nosql_data.extend(all_data)
-                                all_data.clear()
-                    else:
-                        print("Path does not exist:", str(zip_filepath + filename))
+                    if not self.obj.sql_data.is_day_processed(owner, stream_id, stream_day):
+                        if os.path.exists(str(zip_filepath + filename)):
+                            all_data = self.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
+                                                           data_descriptor,
+                                                           influxdb_insert, influxdb_client, nosql_insert)
+                            if nosql_insert:
+                                if not self.obj.sql_data.is_day_processed(owner, stream_id, stream_day):
+                                    nosql_data.extend(all_data)
+                                    all_data.clear()
+                        else:
+                            print("Path does not exist:", str(zip_filepath + filename))
             else:
                 if os.path.exists(zip_filepath + str(filenames[0])):
                     all_data = self.line_to_sample(zip_filepath + str(filenames[0]), stream_id, owner, owner_name, name,
@@ -132,6 +133,7 @@ class CSVToDB():
             if len(nosql_data)>0:
                 is_successful = self.obj.nosql.write_file(owner, stream_id, nosql_data)
                 if is_successful==True:
+                    print("stream_id, name, owner, start_time", stream_id, name, owner, nosql_data[0].start_time)
                     self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
                                                        annotations, stream_type, nosql_data[0].start_time,
                                                        nosql_data[len(nosql_data) - 1].start_time)
@@ -273,9 +275,10 @@ class CSVToDB():
                         ############### END INFLUXDB BLOCK
 
                         ############### START OF NO-SQL (HDFS) DATA BLOCK
-                        start_time_dt = datetime.datetime.utcfromtimestamp(start_time)
+                        if nosql_insert:
+                            start_time_dt = datetime.datetime.utcfromtimestamp(start_time)
 
-                        grouped_samples.append(DataPoint(start_time_dt, None, offset, values))
+                            grouped_samples.append(DataPoint(start_time_dt, None, offset, values))
 
                         ############### END OF NO-SQL (HDFS) DATA BLOCK
 
