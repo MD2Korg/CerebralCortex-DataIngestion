@@ -79,6 +79,10 @@ def run():
         if CC.config["messaging_service"]=="none":
             raise Exception("Messaging service is disabled (none) in cerebralcortex.yml. Please update configs.")
 
+        try:
+            ping_kafka = int(ping_kafka)
+        except:
+            raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml")
         consumer_group_id = "md2k-test"
         broker = str(CC.config["kafka"]["host"])+":"+str(CC.config["kafka"]["port"])
         ssc = StreamingContext(spark_context, ping_kafka)
