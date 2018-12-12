@@ -144,7 +144,8 @@ class CSVToDB():
             # mark day as processed in data_replay table
             #if is_successful==True and self.obj.ingestion_type == "mysql":
             # in case of file corruption and no data. mark the day as processed.
-            self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
+            if self.obj.ingestion_type == "mysql":
+                self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
     def __repr__(self):
         return str(self.__dict__)
 
