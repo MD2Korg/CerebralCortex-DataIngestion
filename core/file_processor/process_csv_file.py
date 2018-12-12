@@ -116,7 +116,7 @@ class CSVToDB():
                             all_data = self.line_to_sample(zip_filepath + filename, stream_id, owner, owner_name, name,
                                                            data_descriptor,
                                                            influxdb_insert, influxdb_client, nosql_insert)
-                            if nosql_insert:
+                            if nosql_insert and len(all_data)>0:
                                 if not self.obj.sql_data.is_day_processed(owner, stream_id, stream_day):
                                     nosql_data.extend(all_data)
                                     all_data.clear()
@@ -127,7 +127,7 @@ class CSVToDB():
                     all_data = self.line_to_sample(zip_filepath + str(filenames[0]), stream_id, owner, owner_name, name,
                                                    data_descriptor,
                                                    influxdb_insert, influxdb_client, nosql_insert)
-                    if nosql_insert:
+                    if nosql_insert and len(all_data)>0:
                         nosql_data = all_data
 
             if len(nosql_data)>0:
