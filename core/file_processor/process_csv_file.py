@@ -137,18 +137,14 @@ class CSVToDB():
                     self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
                                                        annotations, stream_type, nosql_data[0].start_time,
                                                        nosql_data[len(nosql_data) - 1].start_time)
-            else:
-                # in case of file corruption and no data. mark the day as processed.
-                self.obj.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
-                                                       annotations, stream_type, nosql_data[0].start_time,
-                                                       nosql_data[len(nosql_data) - 1].start_time)
 
             nosql_data.clear()
             all_data.clear()
 
             # mark day as processed in data_replay table
-            if is_successful==True and self.obj.ingestion_type == "mysql":
-                self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
+            #if is_successful==True and self.obj.ingestion_type == "mysql":
+            # in case of file corruption and no data. mark the day as processed.
+            self.obj.sql_data.mark_processed_day(owner, stream_id, stream_day)
     def __repr__(self):
         return str(self.__dict__)
 
