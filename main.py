@@ -64,6 +64,7 @@ def run():
     if ingestion_type=="mysql":
         all_days = CC.SqlData.get_all_data_days()
         for day in all_days:
+            print("Processing day:", day)
             for replay_batch in CC.SqlData.get_replay_batch(day=day, record_limit=mydb_batch_size, nosql_blacklist=ingestion_config["nosql_blacklist"]):
                 new_replay_batch = []
                 if participants=="all" or participants=="":
