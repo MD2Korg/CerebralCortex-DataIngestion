@@ -41,7 +41,7 @@ For the versions available, see [this repository's tags](https://github.com/MD2K
 
 ## Contributors
 
-Link to the [list of contributors](https://github.com/MD2Korg/CerebralCortex-KafkaStreamPreprocessor/graphs/contributors) who participated in this project.
+Link to the [list of contributors](https://github.com/MD2Korg/CerebralCortex-DataIngestion/graphs/contributors) who participated in this project.
 
 ## License
 
