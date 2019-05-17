@@ -24,10 +24,8 @@
 
 
 import argparse
-import gzip
 import json
 import os
-from datetime import datetime
 
 from cerebralcortex.kernel import Kernel
 from cerebralcortex.core.config_manager.config import Configuration
@@ -42,22 +40,15 @@ class ReplayCerebralCortexData:
 
         self.CC = CC
         self.table_name = table_name
-        #self.day = day
         self.data_dir = ingestion_config["data_ingestion"]["data_dir_path"]
-        #self.selected_participants = list(filter(None, selected_participants.split(",")))
-        #self.lab_participants = []
         self.read_data_dir()
 
     def read_data_dir(self):
         for stream_dir in os.scandir(self.data_dir):
             if stream_dir.is_dir():
-                #self.scan_stream_dir(stream_dir)
                 for day_dir in os.scandir(stream_dir.path):
                     self.scan_day_dir(day_dir)
 
-    # def scan_stream_dir(self, stream_dir1):
-    #     for day_dir in os.scandir(stream_dir1.path):
-    #         self.scan_day_dir(day_dir)
 
     def scan_day_dir(self, day_dir):
         if day_dir.is_dir():
@@ -74,10 +65,7 @@ class ReplayCerebralCortexData:
                         if f.endswith(".gz"):
                             new_filename = (stream_dir + "/" + f).replace(self.data_dir, "")
                             files_list.append(new_filename)
-                            #dir_size += os.path.getsize(stream_dir + "/" + f)
                     metadata_filename = self.data_dir + files_list[0].replace(".gz", ".json")
-                    # with open(metadata_filename, 'r') as mtd:
-                    #     metadata = mtd.read()
                     metadata = self.read_json_file(metadata_filename)
                     stream_name = metadata["name"]
                     self.CC.SqlData.add_to_data_replay_table(self.table_name, owner_id, stream_id, stream_name, day,
@@ -88,29 +76,14 @@ class ReplayCerebralCortexData:
             metadata = jfile.read()
         return json.loads(metadata)
 
-    # def read_gz_file(self, filename):
-    #     with gzip.open(filename, "r") as gzfile:
-    #         for line in gzfile:
-    #             day = line.decode("utf-8").split(",")[0]
-    #             day = datetime.fromtimestamp(int(day) / 1000)
-    #             day = day.strftime('%Y%m%d')
-    #             break
-    #     return day
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='CerebralCortex Data Replay')
     parser.add_argument('-c', '--config_dir', help='Configuration directory path', required=True)
-    parser.add_argument('-d', '--day', help='Configuration directory path', required=False)
-    parser.add_argument('-participants', '--participants',
-                        help='Scan all users directories or only for the list provided in the script.', type=str,
-                        default="all", required=False)
 
     args = vars(parser.parse_args())
 
     config_dir_path = str(args["config_dir"]).strip()
-    # selected_participants = str(args["participants"]).strip()
-    # day = str(args["day"]).strip() # day to be scanned
 
     CC = Kernel(config_dir_path)
     ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
