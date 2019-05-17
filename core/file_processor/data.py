@@ -27,7 +27,7 @@ from core.file_processor.process_csv_file import CSVToDB
 from core.file_processor.process_flatbuffer import FlatbufferToDB
 from cerebralcortex.core.log_manager.log_handler import LogTypes
 
-class ProcessData(CSVToDB, FlatbufferToDB):
+class ProcessData(FlatbufferToDB):
     def __init__(self, CC, ingestion_config):
         """
 

@@ -23,9 +23,48 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import msgpack
+import fastparquet
+import pandas
+import json
+import uuid
+import os
+from deepdiff import DeepDiff
+from flask import request
+from flask_restplus import Namespace, Resource
+from datetime import datetime
+import traceback
+import gzip
+
 
 class FlatbufferToDB():
     '''This class is responsible to read flatbuffer files, convert them infot parquet format and insert data in HDFS and/or Influx.'''
+
+    def convert_to_parquet(input_data):
+        result = []
+
+        unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
+        for unpacked in unpacker:
+            result.append(list(unpacked))
+
+        return result
+
+
+    def create_dataframe(data):
+        header = data[0]
+        data = data[1:]
+
+        if data is None:
+            return None
+        else:
+            df = pandas.DataFrame(data, columns=header)
+            df.Timestamp = pandas.to_datetime(df['Timestamp'], unit='us')
+            df.Timestamp = df.Timestamp.dt.tz_localize('UTC')
+            return df
+
+
+    def write_parquet(df, file, compressor=None, append=False):
+        fastparquet.write(file, df, len(df), compression=compressor, append=append)
 
     def file_processor(self, msg: dict, zip_filepath: str, influxdb_insert: bool = False, nosql_insert: bool = True):
 

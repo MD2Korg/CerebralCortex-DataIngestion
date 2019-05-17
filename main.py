@@ -27,72 +27,50 @@
 from cerebralcortex.core.util.spark_helper import get_or_create_sc
 from pyspark.streaming import StreamingContext
 from cerebralcortex.core.config_manager.config import Configuration
-from cerebralcortex.cerebralcortex import CerebralCortex
+from cerebralcortex.kernel import Kernel
 from core.messaging_service.process_messages import kafka_msg_to_db, mysql_batch_to_db
 from core.messaging_service.kafka_consumer import spark_kafka_consumer
 import argparse
 
 
 def run():
-    parser = argparse.ArgumentParser(description='CerebralCortex Kafka Message Handler.')
+    parser = argparse.ArgumentParser(description='CerebralCortex Data Ingestion Pipeline.')
     parser.add_argument("-c", "--config_dir", help="Configurations directory path.", required=True)
-    parser.add_argument("-pa", "--participants",
-                        help="Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.", default="",
-                        required=False)
+
 
     args = vars(parser.parse_args())
 
     config_dir_path = str(args["config_dir"]).strip()
-    participants = args["participants"]
 
     # data ingestion configurations
     ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
 
-
-    mydb_batch_size = ingestion_config["mysql_batch_size"]
-
     ping_kafka = ingestion_config["ping_kafka"]
     data_path = ingestion_config["data_ingestion"]["data_dir_path"]
-    ingestion_type = ingestion_config["data_ingestion"]["type"]
 
     # Kafka Consumer Configs
     spark_context = get_or_create_sc(type="sparkContext")
     spark_context.setLogLevel("WARN")
 
-    CC = CerebralCortex(config_dir_path)
+    CC = Kernel(config_dir_path)
 
-    if ingestion_type=="mysql":
-        all_days = CC.SqlData.get_all_data_days()
-        for day in all_days:
-            print("Processing day:", day)
-            for replay_batch in CC.SqlData.get_replay_batch(day=day, record_limit=mydb_batch_size, nosql_blacklist=ingestion_config["nosql_blacklist"]):
-                new_replay_batch = []
-                if participants=="all" or participants=="":
-                    new_replay_batch = replay_batch
-                else:
-                    selected_participants = list(filter(None, participants.split(",")))
-                    for rb in replay_batch:
-                        if rb["owner_id"] in selected_participants:
-                            new_replay_batch.append(rb)
-                mysql_batch_to_db(spark_context, new_replay_batch, data_path, config_dir_path, ingestion_config)
+    if CC.config["messaging_service"]=="none":
+        raise Exception("Messaging service is disabled (none) in cerebralcortex.yml. Please update configs.")
 
-    else:
-        if CC.config["messaging_service"]=="none":
-            raise Exception("Messaging service is disabled (none) in cerebralcortex.yml. Please update configs.")
+    try:
+        ping_kafka = int(ping_kafka)
+    except:
+        raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml")
 
-        try:
-            ping_kafka = int(ping_kafka)
-        except:
-            raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml")
-        consumer_group_id = "md2k-test"
-        broker = str(CC.config["kafka"]["host"])+":"+str(CC.config["kafka"]["port"])
-        ssc = StreamingContext(spark_context, ping_kafka)
-        kafka_files_stream = spark_kafka_consumer(["filequeue"], ssc, broker, consumer_group_id, CC)
-        if kafka_files_stream is not None:
-            kafka_files_stream.foreachRDD(lambda rdd: kafka_msg_to_db(rdd, data_path, config_dir_path, ingestion_config, CC))
+    ssc = StreamingContext(spark_context, ping_kafka)
+    kafka_files_stream = CC.create_direct_kafka_stream(["filequeue"], ssc)
+    if kafka_files_stream is not None:
+        kafka_files_stream.foreachRDD(lambda rdd: kafka_msg_to_db(rdd, data_path, config_dir_path, ingestion_config, CC))
 
-        ssc.start()
-        ssc.awaitTermination()
+    ssc.start()
+    ssc.awaitTermination()
+
+
 
 
 if __name__ == "__main__":

@@ -23,30 +23,18 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import json
-from cerebralcortex.cerebralcortex import CerebralCortex
-from cerebralcortex.core.data_manager.raw.file_to_db import FileToDB
-from core.file_processor.data import ProcessData
+# from cerebralcortex.cerebralcortex import CerebralCortex
+# from cerebralcortex.core.data_manager.raw.file_to_db import FileToDB
+# from core.file_processor.data import ProcessData
 from pyspark.streaming.kafka import KafkaDStream
 
 
 def save_data(msg, data_path, config_filepath, ingestion_config):
-    CC = CerebralCortex(config_filepath)
-    process_data = ProcessData(CC, ingestion_config)
-    process_data.ingest.file_processor(msg, data_path, ingestion_config["data_ingestion"]["influxdb_in"], ingestion_config["data_ingestion"]["nosql_in"])
+    print(msg)
+    # CC = CerebralCortex(config_filepath)
+    # process_data = ProcessData(CC, ingestion_config)
+    # process_data.ingest.file_processor(msg, data_path, ingestion_config["data_ingestion"]["influxdb_in"], ingestion_config["data_ingestion"]["nosql_in"])
 
-#########################################################################################
-######################### MySQL Based Data Ingestion ####################################
-#########################################################################################
-
-def mysql_batch_to_db(spark_context, replay_batch, data_path, config_filepath, ingestion_config):
-    if len(replay_batch)>0:
-        message = spark_context.parallelize(replay_batch)
-        message.foreach(lambda msg: save_data(msg, data_path, config_filepath, ingestion_config))
-        print("File Iteration count:", len(replay_batch))
-
-#########################################################################################
-######################### KAFKA Based Data Ingestion ####################################
-#########################################################################################
 
 def verify_fields(msg: dict) -> bool:
     """
@@ -55,9 +43,17 @@ def verify_fields(msg: dict) -> bool:
     :param data_path:
     :return:
     """
-    if "metadata" in msg and "filename" in msg and "day" in msg:
+    if "filename" in msg:
         return True
-    return True
+    return False
+
+def store_offset_ranges(rdd, CC):
+    offsetRanges = rdd.offsetRanges()
+    for offsets in offsetRanges:
+        try:
+            CC.store_or_update_Kafka_offset(offsets.topic, offsets.partition, offsets.fromOffset, offsets.untilOffset)
+        except Exception as e:
+            print(e)
 
 def kafka_msg_to_db(message: KafkaDStream, data_path, config_filepath, ingestion_config, CC):
     """
@@ -69,12 +65,5 @@ def kafka_msg_to_db(message: KafkaDStream, data_path, config_filepath, ingestion
     valid_records = records.filter(lambda rdd: verify_fields(rdd))
     results = valid_records.map(lambda msg: save_data(msg, data_path, config_filepath, ingestion_config))
     print("File Iteration count:", results.count())
-    store_offset_ranges(message, CC)
+    #store_offset_ranges(message, CC)
 
-def store_offset_ranges(rdd, CC):
-    offsetRanges = rdd.offsetRanges()
-    for offsets in offsetRanges:
-        try:
-            CC.store_or_update_Kafka_offset(offsets.topic, offsets.partition, offsets.fromOffset, offsets.untilOffset)
-        except Exception as e:
-            print(e)
