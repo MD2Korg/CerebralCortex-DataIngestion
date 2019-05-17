@@ -83,7 +83,7 @@ def run():
         try:
             ping_kafka = int(ping_kafka)
         except:
-            raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml")
+            raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml for more information.")
         consumer_group_id = "md2k-test"
         broker = str(CC.config["kafka"]["host"])+":"+str(CC.config["kafka"]["port"])
         ssc = StreamingContext(spark_context, ping_kafka)
