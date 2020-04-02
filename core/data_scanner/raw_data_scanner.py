@@ -53,8 +53,7 @@ def get_files_list(raw_data_path, study_name, stream_names=[], versions=[], user
                                 continue
                             for day_dir in os.scandir(user_dir.path):
                                 if day_dir.name==day:
-                                    for file_name in os.listdir(day_dir.path):
-                                        files_list.append({"stream_name":stream_dir.name, "user_id": user_dir.name, "version": version_dir.name, "file_path":day_dir.path+"/"+file_name})
+                                    files_list.append({"stream_name":stream_dir.name, "user_id": user_dir.name, "version": version_dir.name,"file_path":day_dir.path, "files":os.listdir(day_dir.path)})
     return files_list
 
 # dd = get_files_list(raw_data_path="/home/ali/IdeaProjects/MD2K_DATA/CC_APISERVER_DATA/raw/", study_name="default", day="310320")
