@@ -66,16 +66,25 @@ def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_n
                             for day_dir in os.scandir(user_dir.path):
                                 if day_dir.name==day:
                                     if batch_size==batch_counter:
-                                        batch_counter=1
-                                        files_list.append({"stream_name": stream_dir.name, "user_id": user_dir.name,
-                                                           "version": version_dir.name, "file_path": day_dir.path,
-                                                           "files": os.listdir(day_dir.path)})
+
+                                        for hour in os.scandir(day_dir.path):
+                                            if hour.name == hour:
+                                                files_list.append(
+                                                    {"stream_name": stream_dir.name, "user_id": user_dir.name,
+                                                     "version": version_dir.name, "hour": hour.name,
+                                                     "file_path": hour.path,
+                                                     "files": os.listdir(hour.path)})
+                                        batch_counter = 1
                                         yield files_list
                                         files_list = []
                                     else:
-                                        files_list.append({"stream_name": stream_dir.name, "user_id": user_dir.name,
-                                                           "version": version_dir.name, "file_path": day_dir.path,
-                                                           "files": os.listdir(day_dir.path)})
+                                        for hour in os.scandir(day_dir.path):
+                                            if hour.name == hour:
+                                                files_list.append(
+                                                    {"stream_name": stream_dir.name, "user_id": user_dir.name,
+                                                     "version": version_dir.name, "hour": hour.name,
+                                                     "file_path": hour.path,
+                                                     "files": os.listdir(hour.path)})
                                         batch_counter +=1
     yield files_list
 
