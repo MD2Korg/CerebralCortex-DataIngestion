@@ -29,6 +29,7 @@ from core.util.config_parser import get_configs
 from core.file_processor.process_msgpack import msgpack_to_pandas
 import argparse
 import gzip
+from core.util.spark_helper import get_or_create_sc
 import os
 import pandas as pd
 import pyarrow as pa
@@ -90,16 +91,15 @@ def run():
     cc_config = get_configs(config_dir_path, "cerebralcortex.yml")
     raw_data_path = ingestion_config["data_ingestion"]["raw_data_path"]
 
-    files_list = get_files_list(raw_data_path=raw_data_path, study_name=study_name, day=day, stream_names=stream_names, user_ids=user_ids, versions=versions)
+    files_list = get_files_list(raw_data_path=raw_data_path, study_name=study_name, day=day, stream_names=stream_names, batch_size=2,
+                   user_ids=user_ids, versions=versions)
+    for files in files_list:
 
-    #save_data(files_list[0], study_name, cc_config)
+        spark_context = get_or_create_sc()
 
-    # spark_context = None
-    #
-    # message = spark_context.parallelize(files_list)
-    # message.foreach(lambda msg: save_data(msg, cc_config))
-    # print("File Iteration count:", len(files_list))
-
+        message = spark_context.parallelize(files)
+        message.foreach(lambda msg: save_data(msg, cc_config))
+        print("File Iteration count:", len(files))
 
 if __name__ == "__main__":
     run()
