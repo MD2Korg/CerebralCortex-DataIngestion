@@ -4,7 +4,7 @@
 #source /cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin/activate
 
 
-export PYTHONPATH="${PYTHONPATH}:/home/cnali/CerebralCortex-DataIngestion/"
+export PYTHONPATH="${PYTHONPATH}:/cerebralcortex/code/CerebralCortex-DataIngestion/"
 
 #########################################################################################
 ############################ Environment Configs ########################################
