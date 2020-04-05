@@ -48,7 +48,7 @@ def save_data(msg, study_name, cc_config):
     if raw_files_dir[-1:]!="/":
         raw_files_dir = raw_files_dir+"/"
 
-    hdfs_url = raw_files_dir+"study="+study_name+"/stream"+msg.get("stream_name")+"/version="+msg.get("version")+"/user="+msg.get("user_id")+"/"
+    hdfs_url = raw_files_dir+"study="+study_name+"/"+msg.get("stream_name")+"/"+msg.get("version")+"/"+msg.get("user_id")+"/"
     try:
         table = pa.Table.from_pandas(data, preserve_index=False)
         fs = pa.hdfs.connect(hdfs_ip, hdfs_port)
@@ -62,6 +62,8 @@ def run():
     parser.add_argument("-c", "--config_dir", help="Configurations directory path.", required=True)
     parser.add_argument("-dy", "--day", help="Day date to be processed. Format is MMDDYYYY.", required=True)
     parser.add_argument("-hr", "--hour", help="hour of the day to be processed. Format is HH.", required=True)
+    parser.add_argument("-bs", "--batch_size", help="Number of folders to process at a time.", required=True)
+
     parser.add_argument("-sn", "--study_name",
                         help="Provide a study_name.",
                         default="default",
@@ -85,6 +87,7 @@ def run():
     study_name = args["study_name"]
     day = args["day"]
     hour = args["hour"]
+    batch_size = args["batch_size"]
     stream_names = args["stream_names"]
     user_ids = args["user_ids"]
     versions = args["versions"]
@@ -93,9 +96,7 @@ def run():
     cc_config = get_configs(config_dir_path, "cerebralcortex.yml")
     raw_data_path = ingestion_config["data_ingestion"]["raw_data_path"]
 
-    files_list = get_files_list(raw_data_path=raw_data_path, study_name=study_name, day=day, hour=hour, stream_names=stream_names, batch_size=2,
-                   user_ids=user_ids, versions=versions)
-    for files in files_list:
+    for files in get_files_list(raw_data_path=raw_data_path, study_name=study_name, day=day, hour=hour, stream_names=stream_names, batch_size=batch_size, user_ids=user_ids, versions=versions):
 
         spark_context = get_or_create_sc()
 

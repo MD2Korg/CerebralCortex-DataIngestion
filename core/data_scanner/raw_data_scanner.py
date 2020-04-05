@@ -74,8 +74,8 @@ def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_n
                                                      "version": version_dir.name, "hour": hour_dir.name,
                                                      "file_path": hour_dir.path,
                                                      "files": os.listdir(hour_dir.path)})
-                                        batch_counter = 1
                                         yield files_list
+                                        batch_counter = 1
                                         files_list = []
                                     else:
                                         for hour_dir in os.scandir(day_dir.path):
