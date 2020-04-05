@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 
-# Use a virtualenv with the appropriate resources
-#source /cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin/activate
 
+base_path=$1
 
 export PYTHONPATH="${PYTHONPATH}:/cerebralcortex/code/CerebralCortex-DataIngestion/"
 
@@ -36,16 +35,18 @@ export LD_LIBRARY_PATH="/usr/local/hadoop/lib/native/libhdfs.so"
 
 # directory path where all the CC configurations are stored
 CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf/"
-DAY_TO_PROCESS=20200405,20200406#`date '+%Y%m%d'` # MMDDYYYY format, single date or multiple dates as csv, 20200405,20200406
-HOUR_TO_PROCESS=1,2,3`date -d '1 hours ago' '+%H'` #, single date or multiple dates as csv, 1,2,3,4
+DAY_TO_PROCESS=20200404,20200405,20200406 #`date '+%Y%m%d'` # MMDDYYYY format, single date or multiple dates as csv, 20200405,20200406
+HOUR_TO_PROCESS=00,01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24 #`date -d '1 hours ago' '+%H'` #, single date or multiple dates as csv, 1,2,3,4
 BATCH_SIZE=200
 STUDY_NAME="mcontain"
 
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.
-SPARK_MASTER="spark://dantooine10dot:7077"
+#SPARK_MASTER="spark://dantooine10dot:7077"
+SPARK_MASTER="local[5]"
 SPARK_UI_PORT=4087
 
-PY_FILES=`pwd`"/../eggs/cerebralcortex_data_ingestion-3.2.0-py3.6.egg"
+PY_FILES="$base_path/eggs/cerebralcortex_data_ingestion-3.2.0-py3.6.egg"
 VIRTUAL_ENV="--conf spark.pyspark.virtualenv.enabled=true  --conf spark.pyspark.virtualenv.type=native --conf spark.pyspark.virtualenv.requirements=/cerebralcortex/kessel_jupyter_virtualenv/requirements.txt --conf spark.pyspark.virtualenv.bin.path=/cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin --conf spark.pyspark.python=/cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin/python3.6"
 
-spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
+#spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
+spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g main.py -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
