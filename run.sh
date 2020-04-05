@@ -36,8 +36,8 @@ export LD_LIBRARY_PATH="/usr/local/hadoop/lib/native/libhdfs.so"
 
 # directory path where all the CC configurations are stored
 CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf/"
-DAY_TO_PROCESS="" # MMDDYYYY format
-HOUR_TO_PROCESS=""
+DAY_TO_PROCESS=`date '+%m%d%Y'` # MMDDYYYY format
+HOUR_TO_PROCESS=`date -d '1 hours ago' '+%H'`
 BATCH_SIZE=200
 STUDY_NAME="mcontain"
 
