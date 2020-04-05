@@ -64,7 +64,7 @@ def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_n
                             if len(user_ids) > 0 and user_dir.name.replace("user=", "") not in user_ids:
                                 continue
                             for day_dir in os.scandir(user_dir.path):
-                                if day_dir.name==day:
+                                if day_dir.name in day:
                                     if batch_size==batch_counter:
 
                                         for hour_dir in os.scandir(day_dir.path):
@@ -79,7 +79,7 @@ def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_n
                                         files_list = []
                                     else:
                                         for hour_dir in os.scandir(day_dir.path):
-                                            if hour_dir.name == hour:
+                                            if hour_dir.name in hour:
                                                 files_list.append(
                                                     {"stream_name": stream_dir.name, "user_id": user_dir.name,
                                                      "version": version_dir.name, "hour": hour_dir.name,

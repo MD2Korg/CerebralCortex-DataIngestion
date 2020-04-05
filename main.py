@@ -85,8 +85,8 @@ def run():
 
     config_dir_path = str(args["config_dir"]).strip()
     study_name = args["study_name"]
-    day = args["day"]
-    hour = args["hour"]
+    day = args["day"].split(",")
+    hour = args["hour"].split(",")
     batch_size = args["batch_size"]
     stream_names = args["stream_names"]
     user_ids = args["user_ids"]
