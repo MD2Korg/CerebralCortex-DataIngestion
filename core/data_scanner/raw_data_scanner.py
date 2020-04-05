@@ -30,7 +30,7 @@ import os
 from datetime import datetime
 
 
-def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_names=[], versions=[], user_ids=[], day=None):
+def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_names=[], versions=[], user_ids=[], day=None, hour=None):
     '''
 
     :param raw_data_path:
@@ -67,24 +67,24 @@ def get_files_list(raw_data_path, batch_size=100, study_name="default", stream_n
                                 if day_dir.name==day:
                                     if batch_size==batch_counter:
 
-                                        for hour in os.scandir(day_dir.path):
-                                            if hour.name == hour:
+                                        for hour_dir in os.scandir(day_dir.path):
+                                            if hour_dir.name == hour:
                                                 files_list.append(
                                                     {"stream_name": stream_dir.name, "user_id": user_dir.name,
-                                                     "version": version_dir.name, "hour": hour.name,
-                                                     "file_path": hour.path,
-                                                     "files": os.listdir(hour.path)})
+                                                     "version": version_dir.name, "hour": hour_dir.name,
+                                                     "file_path": hour_dir.path,
+                                                     "files": os.listdir(hour_dir.path)})
                                         batch_counter = 1
                                         yield files_list
                                         files_list = []
                                     else:
-                                        for hour in os.scandir(day_dir.path):
-                                            if hour.name == hour:
+                                        for hour_dir in os.scandir(day_dir.path):
+                                            if hour_dir.name == hour:
                                                 files_list.append(
                                                     {"stream_name": stream_dir.name, "user_id": user_dir.name,
-                                                     "version": version_dir.name, "hour": hour.name,
-                                                     "file_path": hour.path,
-                                                     "files": os.listdir(hour.path)})
+                                                     "version": version_dir.name, "hour": hour_dir.name,
+                                                     "file_path": hour_dir.path,
+                                                     "files": os.listdir(hour_dir.path)})
                                         batch_counter +=1
     yield files_list
 
