@@ -37,6 +37,7 @@ export LD_LIBRARY_PATH="/usr/local/hadoop/lib/native/libhdfs.so"
 # directory path where all the CC configurations are stored
 CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf/"
 DAY_TO_PROCESS="" # MMDDYYYY format
+HOUR_TO_PROCESS=""
 STUDY_NAME="mcontain"
 
 # spark master. This will work on local machine only. In case of cloud, provide spark master node URL:port.
@@ -46,4 +47,4 @@ SPARK_UI_PORT=4087
 PY_FILES=`pwd`"/../eggs/cerebralcortex_data_ingestion-3.2.0-py3.5.egg"
 VIRTUAL_ENV="--conf spark.pyspark.virtualenv.enabled=true  --conf spark.pyspark.virtualenv.type=native --conf spark.pyspark.virtualenv.requirements=/cerebralcortex/kessel_jupyter_virtualenv/requirements.txt --conf spark.pyspark.virtualenv.bin.path=/cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin --conf spark.pyspark.python=/cerebralcortex/kessel_jupyter_virtualenv/cc3_high_performance/bin/python3.6"
 
-spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY -dy $DAY_TO_PROCESS -sn $STUDY_NAME
+spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
