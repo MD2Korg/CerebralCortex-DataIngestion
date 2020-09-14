@@ -23,26 +23,36 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import msgpack
+import pandas as pd
 
-class FlatbufferToDB():
-    '''This class is responsible to read flatbuffer files, convert them infot parquet format and insert data in HDFS and/or Influx.'''
+def msgpack_to_pandas(input_data: object) -> pd.DataFrame:
+    """
+    Convert msgpack binary file into pandas dataframe
 
-    def file_processor(self, msg: dict, zip_filepath: str, influxdb_insert: bool = False, nosql_insert: bool = True):
+    Args:
+        input_data (msgpack): msgpack data file
 
-        """
-        Process raw .gz files' data and json metadata files, convert into DataStream object format and store data in CC data-stores
-        :param msg: Kafka message in json format
-        :param zip_filepath: data folder path where all the gz/json files are located
-        :param influxdb_insert: Turn on/off influxdb data ingestion
-        :param nosql_insert: Turn on/off nosql data ingestion
+    Returns:
+        dataframe: pandas dataframe
 
-        """
+    """
+    data = []
 
-        # TODO: Implement flatbuffer parser
+    unpacker = msgpack.Unpacker(input_data, use_list=False, raw=False)
+    for unpacked in unpacker:
+        data.append(list(unpacked))
 
-        # Save metadata to MySQL
-        # self.sql_data.save_stream_metadata(stream_id, name, owner, data_descriptor, execution_context,
-        #                                        annotations, stream_type, nosql_data[0].start_time,
-        #                                        nosql_data[len(nosql_data) - 1].start_time)
+    header = data[0]
+    data = data[1:]
 
-        raise Exception("Flatbuffer is not implemented yet.")
+    if data is None:
+        return None
+    else:
+        df = pd.DataFrame(data, columns=header)
+        df.columns = df.columns.str.lower()
+        df.timestamp = pd.to_datetime(df['timestamp'], unit='us')
+        df.timestamp = df.timestamp.dt.tz_localize('UTC')
+        df.localtime = pd.to_datetime(df['localtime'], unit='us')
+        df.localtime = df.localtime.dt.tz_localize('UTC')
+        return df

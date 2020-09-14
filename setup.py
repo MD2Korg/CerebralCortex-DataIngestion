@@ -12,9 +12,9 @@ with open(path.join(here, 'README.md')) as f:
     long_description = f.read()
 
 setup(
-    name="MD2K: CerebralCortex: DataIngestion",
+    name="cerebralcortex-data-ingestion",
 
-    version='2.4.0',
+    version='3.2.0',
 
     description='',
     long_description=long_description,

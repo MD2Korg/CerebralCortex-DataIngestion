@@ -1,4 +1,2 @@
-py4j
-pytz==2017.2
-PyYAML==3.12
-Pympler==0.5
+msgpack==0.6.1
+PyYAML==4.2b1

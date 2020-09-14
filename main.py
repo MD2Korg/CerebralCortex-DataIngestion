@@ -23,77 +23,86 @@
 # OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-
-from cerebralcortex.core.util.spark_helper import get_or_create_sc
-from pyspark.streaming import StreamingContext
-from cerebralcortex.core.config_manager.config import Configuration
-from cerebralcortex.cerebralcortex import CerebralCortex
-from core.messaging_service.process_messages import kafka_msg_to_db, mysql_batch_to_db
-from core.messaging_service.kafka_consumer import spark_kafka_consumer
+from datetime import datetime, timedelta
+from core.data_scanner.raw_data_scanner import get_files_list
+from core.util.config_parser import get_configs
+from core.file_processor.process_msgpack import msgpack_to_pandas
 import argparse
+import gzip
+from core.util.spark_helper import get_or_create_sc
+import os
+import pandas as pd
+import pyarrow as pa
+import pyarrow.parquet as pq
 
+def save_data(msg, study_name, cc_config):
+    files = msg.get("files")
+    data = pd.DataFrame()
+    for f in files:
+        with gzip.open(msg.get("file_path")+"/"+f, 'rb') as input_data:
+            pdf = msgpack_to_pandas(input_data)
+        data = data.append(pdf, ignore_index=True)
+    hdfs_ip = cc_config['hdfs']['host']
+    hdfs_port = cc_config['hdfs']['port']
+    raw_files_dir = cc_config['hdfs']['raw_files_dir']
+    if raw_files_dir[-1:]!="/":
+        raw_files_dir = raw_files_dir+"/"
+
+    hdfs_url = raw_files_dir+"study="+study_name+"/"+msg.get("stream_name")+"/"+msg.get("version")+"/"+msg.get("user_id")+"/"
+    try:
+        table = pa.Table.from_pandas(data, preserve_index=False)
+        fs = pa.hdfs.connect(hdfs_ip, hdfs_port)
+        pq.write_to_dataset(table, root_path=hdfs_url, filesystem=fs)
+        return True
+    except Exception as e:
+        raise Exception("Cannot store dataframe: " + str(e))
 
 def run():
     parser = argparse.ArgumentParser(description='CerebralCortex Kafka Message Handler.')
     parser.add_argument("-c", "--config_dir", help="Configurations directory path.", required=True)
-    parser.add_argument("-pa", "--participants",
-                        help="Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.", default="",
+    parser.add_argument("-dy", "--day", help="Day date to be processed. Format is MMDDYYYY.", required=True)
+    parser.add_argument("-hr", "--hour", help="hour of the day to be processed. Format is HH.", required=True)
+    parser.add_argument("-bs", "--batch_size", help="Number of folders to process at a time.", required=True)
+
+    parser.add_argument("-sn", "--study_name",
+                        help="Provide a study_name.",
+                        default="default",
                         required=False)
+    parser.add_argument("-stn", "--stream_names",
+                        help="Provide a comma separated stream_names. All stream_names data will be processed if no name is provided.", default=[],
+                        required=False)
+    parser.add_argument("-uid", "--user_ids",
+                        help="Provide a comma separated participants UUIDs. All participants' data will be processed if no UUIDs is provided.",
+                        default=[],
+                        required=False)
+    parser.add_argument("-vr", "--versions",
+                        help="Provide a comma separated versions. All versions data will be processed if no version is provided.",
+                        default=[],
+                        required=False)
+
 
     args = vars(parser.parse_args())
 
     config_dir_path = str(args["config_dir"]).strip()
-    participants = args["participants"]
+    study_name = args["study_name"]
+    day = args["day"].split(",")
+    hour = args["hour"].split(",")
+    batch_size = args["batch_size"]
+    stream_names = args["stream_names"]
+    user_ids = args["user_ids"]
+    versions = args["versions"]
 
-    # data ingestion configurations
-    ingestion_config = Configuration(config_dir_path, "data_ingestion.yml").config
+    ingestion_config = get_configs(config_dir_path, "data_ingestion.yml")
+    cc_config = get_configs(config_dir_path, "cerebralcortex.yml")
+    raw_data_path = ingestion_config["data_ingestion"]["raw_data_path"]
 
+    for files in get_files_list(raw_data_path=raw_data_path, study_name=study_name, day=day, hour=hour, stream_names=stream_names, batch_size=batch_size, user_ids=user_ids, versions=versions):
 
-    mydb_batch_size = ingestion_config["mysql_batch_size"]
+        spark_context = get_or_create_sc()
 
-    ping_kafka = ingestion_config["ping_kafka"]
-    data_path = ingestion_config["data_ingestion"]["data_dir_path"]
-    ingestion_type = ingestion_config["data_ingestion"]["type"]
-
-    # Kafka Consumer Configs
-    spark_context = get_or_create_sc(type="sparkContext")
-    spark_context.setLogLevel("WARN")
-
-    CC = CerebralCortex(config_dir_path)
-
-    if ingestion_type=="mysql":
-        all_days = CC.SqlData.get_all_data_days()
-        for day in all_days:
-            print("Processing day:", day)
-            for replay_batch in CC.SqlData.get_replay_batch(day=day, record_limit=mydb_batch_size, nosql_blacklist=ingestion_config["nosql_blacklist"]):
-                new_replay_batch = []
-                if participants=="all" or participants=="":
-                    new_replay_batch = replay_batch
-                else:
-                    selected_participants = list(filter(None, participants.split(",")))
-                    for rb in replay_batch:
-                        if rb["owner_id"] in selected_participants:
-                            new_replay_batch.append(rb)
-                mysql_batch_to_db(spark_context, new_replay_batch, data_path, config_dir_path, ingestion_config)
-
-    else:
-        if CC.config["messaging_service"]=="none":
-            raise Exception("Messaging service is disabled (none) in cerebralcortex.yml. Please update configs.")
-
-        try:
-            ping_kafka = int(ping_kafka)
-        except:
-            raise Exception("ping_kafka value can only be an integer. Please check data_ingestion.yml for more information.")
-        consumer_group_id = "md2k-test"
-        broker = str(CC.config["kafka"]["host"])+":"+str(CC.config["kafka"]["port"])
-        ssc = StreamingContext(spark_context, ping_kafka)
-        kafka_files_stream = spark_kafka_consumer(["filequeue"], ssc, broker, consumer_group_id, CC)
-        if kafka_files_stream is not None:
-            kafka_files_stream.foreachRDD(lambda rdd: kafka_msg_to_db(rdd, data_path, config_dir_path, ingestion_config, CC))
-
-        ssc.start()
-        ssc.awaitTermination()
-
+        message = spark_context.parallelize(files)
+        message.foreach(lambda msg: save_data(msg, study_name=study_name, cc_config=cc_config))
+        print("File Iteration count:", len(files))
 
 if __name__ == "__main__":
     run()
