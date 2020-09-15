@@ -39,9 +39,14 @@ def save_data(msg, study_name, cc_config):
     files = msg.get("files")
     data = pd.DataFrame()
     for f in files:
-        with gzip.open(msg.get("file_path")+"/"+f, 'rb') as input_data:
-            pdf = msgpack_to_pandas(input_data)
-        data = data.append(pdf, ignore_index=True)
+        try:
+            with gzip.open(msg.get("file_path")+"/"+f, 'rb') as input_data:
+                pdf = msgpack_to_pandas(input_data)
+            data = data.append(pdf, ignore_index=True)
+        except:
+            # GZIP ERROR
+            print("ERROR: FILE IS CORRUPT: " + msg.get('file_path') + "/" + f)
+            
     hdfs_ip = cc_config['hdfs']['host']
     hdfs_port = cc_config['hdfs']['port']
     raw_files_dir = cc_config['hdfs']['raw_files_dir']
