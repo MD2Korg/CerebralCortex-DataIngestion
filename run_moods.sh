@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+rm -rf /home/twhnat/CerebralCortex-DataIngestion/tmp_moods/study=moods
 
 base_path=$1
 
@@ -38,11 +39,9 @@ export SPARK_HOME="/usr/local/spark"
 #########################################################################################
 
 # directory path where all the CC configurations are stored
-CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf/"
+CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf_debug/"
 DAY_TO_PROCESS=`date '+%Y%m%d'` # MMDDYYYY format, single date or multiple dates as csv, 20200405,20200406
 HOUR_TO_PROCESS=`date -d '1 hours ago' '+%H'` #, single date or multiple dates as csv, 1,2,3,4
-#DAY_TO_PROCESS=20200828
-#HOUR_TO_PROCESS=01,02,03,04,05,06,07,08,09,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,00
 BATCH_SIZE=200
 STUDY_NAME="moods"
 
@@ -56,3 +55,7 @@ VIRTUAL_ENV="--conf spark.pyspark.virtualenv.enabled=true  --conf spark.pyspark.
 
 #spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 50 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES main.py -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
 /usr/local/bin/spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 5 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES "$base_path/main.py" -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
+
+
+echo "Copying data to HDFS"
+/usr/local/hadoop/bin/hdfs dfs -copyFromLocal /home/twhnat/CerebralCortex-DataIngestion/tmp_moods/study=moods /cc3/

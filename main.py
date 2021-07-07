@@ -47,18 +47,14 @@ def save_data(msg, study_name, cc_config):
             # GZIP ERROR
             print("ERROR: FILE IS CORRUPT: " + msg.get('file_path') + "/" + f)
             
-    hdfs_ip = cc_config['hdfs']['host']
-    hdfs_port = cc_config['hdfs']['port']
-    raw_files_dir = cc_config['hdfs']['raw_files_dir']
-    if raw_files_dir[-1:]!="/":
-        raw_files_dir = raw_files_dir+"/"
+    raw_files_dir = '/home/twhnat/CerebralCortex-DataIngestion/tmp_moods/'
 
     hdfs_url = raw_files_dir+"study="+study_name+"/"+msg.get("stream_name")+"/"+msg.get("version")+"/"+msg.get("user_id")+"/"
     try:
-        table = pa.Table.from_pandas(data, preserve_index=False)
-        fs = pa.hdfs.connect(hdfs_ip, hdfs_port)
-        pq.write_to_dataset(table, root_path=hdfs_url, filesystem=fs)
-        return True
+        if data.size > 0:
+            table = pa.Table.from_pandas(data, preserve_index=False)
+            pq.write_to_dataset(table, root_path=hdfs_url)
+            return True
     except Exception as e:
         raise Exception("Cannot store dataframe: " + str(e))
 
