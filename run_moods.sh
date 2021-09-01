@@ -57,5 +57,7 @@ VIRTUAL_ENV="--conf spark.pyspark.virtualenv.enabled=true  --conf spark.pyspark.
 /usr/local/bin/spark-submit --master $SPARK_MASTER $VIRTUAL_ENV --conf spark.ui.port=$SPARK_UI_PORT --total-executor-cores 5 --driver-memory 10g --executor-memory 1g --py-files $PY_FILES "$base_path/main.py" -c $CONFIG_DIRECTORY -bs $BATCH_SIZE -dy $DAY_TO_PROCESS -hr $HOUR_TO_PROCESS -sn $STUDY_NAME
 
 
-echo "Copying data to HDFS"
-/usr/local/hadoop/bin/hdfs dfs -copyFromLocal /home/twhnat/CerebralCortex-DataIngestion/tmp_moods/study=moods /cc3/
+echo "Copying data to FS"
+#/usr/local/hadoop/bin/hdfs dfs -copyFromLocal /home/twhnat/CerebralCortex-DataIngestion/tmp_moods/study=moods /cc3/
+cp -r /home/twhnat/CerebralCortex-DataIngestion/tmp_moods/study=moods /holocron/cerebralcortex/cc3/
+
