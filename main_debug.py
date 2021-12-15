@@ -47,7 +47,7 @@ def save_data(msg, study_name, cc_config):
             # GZIP ERROR
             print("ERROR: FILE IS CORRUPT: " + msg.get('file_path') + "/" + f)
             
-    raw_files_dir = '/home/twhnat/CerebralCortex-DataIngestion/tmp_moods/'
+    raw_files_dir = '/holocron/cerebralcortex/hnat_tmp/debug_moods/'
 
     hdfs_url = raw_files_dir+"study="+study_name+"/"+msg.get("stream_name")+"/"+msg.get("version")+"/"+msg.get("user_id")+"/"
     try:
@@ -56,7 +56,7 @@ def save_data(msg, study_name, cc_config):
             pq.write_to_dataset(table, root_path=hdfs_url)
             return True
     except Exception as e:
-        print("Cannot store dataframe: " + str(e))
+        raise Exception("Cannot store dataframe: " + str(e))
 
 def run():
     parser = argparse.ArgumentParser(description='CerebralCortex Kafka Message Handler.')
