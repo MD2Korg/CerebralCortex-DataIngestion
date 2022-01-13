@@ -1,5 +1,6 @@
-# Copyright (c) 2017, MD2K Center of Excellence
+# Copyright (c) 2022, MD2K Center of Excellence
 # - Nasir Ali <nasir.ali08@gmail.com>
+# - Timothy Hnat <twhnat@memphis.edu>
 # All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
@@ -39,13 +40,22 @@ def save_data(msg, study_name, cc_config):
     files = msg.get("files")
     data = pd.DataFrame()
     for f in files:
+        file_path = msg.get("file_path") + "/" + f
+        file_valid = 'gz' in file_path.rsplit('.',1)[1]
+        file_processed = file_path.rsplit('.',1)[0] + '.processed'
         try:
-            with gzip.open(msg.get("file_path")+"/"+f, 'rb') as input_data:
-                pdf = msgpack_to_pandas(input_data)
-            data = data.append(pdf, ignore_index=True)
+            if file_valid and not os.path.exists(file_processed):
+                with gzip.open(file_path, 'rb') as input_data:
+                    pdf = msgpack_to_pandas(input_data)
+                data = data.append(pdf, ignore_index=True)
+                with open(file_processed, 'w') as fp:
+                    pass
         except:
             # GZIP ERROR
             print("ERROR: FILE IS CORRUPT: " + msg.get('file_path') + "/" + f)
+            with open(file_processed, 'w') as fp:
+                pass
+
             
     raw_files_dir = '/holocron/cerebralcortex/hnat_tmp/debug_moods/'
 

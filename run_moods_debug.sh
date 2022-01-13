@@ -46,7 +46,7 @@ DAY_TO_PROCESS=20200101
 
 # with "until"
 d="2020-01-01"
-until [[ $d > 2022-01-01 ]]; do
+until [[ $d > 2023-01-01 ]]; do
 #    echo "$d"
     DAY_TO_PROCESS+=","
     DAY_TO_PROCESS+=`date '+%Y%m%d' -d "$d"`

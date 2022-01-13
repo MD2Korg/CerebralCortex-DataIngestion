@@ -39,13 +39,21 @@ def save_data(msg, study_name, cc_config):
     files = msg.get("files")
     data = pd.DataFrame()
     for f in files:
+        file_path = msg.get("file_path") + "/" + f
+        file_valid = 'gz' in file_path.rsplit('.',1)[1]
+        file_processed = file_path.rsplit('.',1)[0] + '.processed'
         try:
-            with gzip.open(msg.get("file_path")+"/"+f, 'rb') as input_data:
-                pdf = msgpack_to_pandas(input_data)
-            data = data.append(pdf, ignore_index=True)
+            if file_valid and not os.path.exists(file_processed):
+                with gzip.open(file_path, 'rb') as input_data:
+                    pdf = msgpack_to_pandas(input_data)
+                data = data.append(pdf, ignore_index=True)
+                with open(file_processed, 'w') as fp:
+                    pass
         except:
             # GZIP ERROR
             print("ERROR: FILE IS CORRUPT: " + msg.get('file_path') + "/" + f)
+            with open(file_processed, 'w') as fp:
+                pass
             
     raw_files_dir = '/home/twhnat/CerebralCortex-DataIngestion/tmp_moods/'
 
