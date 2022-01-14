@@ -40,7 +40,11 @@ export SPARK_HOME="/usr/local/spark"
 
 # directory path where all the CC configurations are stored
 CONFIG_DIRECTORY="/cerebralcortex/code/config/cc3_moods_conf_debug/"
-DAY_TO_PROCESS=`date '+%Y%m%d'` # MMDDYYYY format, single date or multiple dates as csv, 20200405,20200406
+
+DAY_TO_PROCESS=`date '+%Y%m%d'`
+DAY_TO_PROCESS+=","
+DAY_TO_PROCESS+=`date '+%Y%m%d' -d 'yesterday'` # MMDDYYYY format, single date or multiple dates as csv, 20200405,20200406  # two days necessary due to midnight rollover
+
 HOUR_TO_PROCESS=`date -d '1 hours ago' '+%H'` #, single date or multiple dates as csv, 1,2,3,4
 BATCH_SIZE=200
 STUDY_NAME="moods"
